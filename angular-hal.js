@@ -1,11 +1,11 @@
 /* global angular */
 
-angular.module('angular-hal', [])
+angular.module('angular-hal', ['AngularEtag'])
 
 .service('halClient', [
-    '$http', '$q', '$window',
+    '$http', '$q', '$window', 'ehttp',
     function (
-        $http, $q, $window
+        $http, $q, $window, ehttp
     ) {
         var rfc6570 = $window.rfc6570;
 
@@ -205,29 +205,57 @@ angular.module('angular-hal', [])
             if (!options.headers) options.headers = {};
             if (!options.headers['Content-Type']) options.headers['Content-Type'] = 'application/json';
             if (!options.headers.Accept) options.headers.Accept = 'application/hal+json,application/json';
+            if (!options.etag) options.etag = false;
 
-            var resource = (
-                $http({
-                    method: method,
-                    url: options.transformUrl ? options.transformUrl(href) : href,
-                    headers: options.headers,
-                    data: data
-                })
-                .then(function (res) {
+            // TO DO: Make etag call ONLY when options.etag ( now not working )
+            if(  method == "get"){
+                var resource = (
+                    ehttp({
+                        method: method,
+                        url: options.transformUrl ? options.transformUrl(href) : href,
+                        headers: options.headers,
+                        data: data
+                    })
+                    .then(function (res) {
 
-                    switch (Math.floor(res.status / 100)) {
-                    case 2:
-                        if (res.data) return createResource(href, options, res.data);
-                        if (res.headers('Content-Location')) return res.headers('Content-Location');
-                        if (res.headers('Location')) return res.headers('Location');
-                        return null;
+                        switch (Math.floor(res.status / 100)) {
+                        case 2:
+                            if (res.data) return createResource(href, options, res.data);
+                            if (res.headers('Content-Location')) return res.headers('Content-Location');
+                            if (res.headers('Location')) return res.headers('Location');
+                            return null;
 
-                    default:
-                        return $q.reject(res.status);
-                    }
+                        default:
+                            return $q.reject(res.status);
+                        }
 
-                })
-            );
+                    })
+                );
+            }else{
+                var resource = (
+                    $http({
+                        method: method,
+                        url: options.transformUrl ? options.transformUrl(href) : href,
+                        headers: options.headers,
+                        data: data
+                    })
+                    .then(function (res) {
+
+                        switch (Math.floor(res.status / 100)) {
+                        case 2:
+                            if (res.data) return createResource(href, options, res.data);
+                            if (res.headers('Content-Location')) return res.headers('Content-Location');
+                            if (res.headers('Location')) return res.headers('Location');
+                            return null;
+
+                        default:
+                            return $q.reject(res.status);
+                        }
+
+                    })
+                );
+            }
+
 
             return resource;
         } //callService

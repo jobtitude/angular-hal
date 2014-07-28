@@ -7,6 +7,7 @@
   ],
   "main": "angular-hal.js",
   "dependencies": {
+    "angular-etag": "git://github.com/forforf/angular-etag.git#master",
     "rfc6570": "~0.1",
     "angular": "~1"
   },
